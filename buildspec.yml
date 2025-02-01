@@ -3,26 +3,28 @@ version: 0.2
 phases:
   pre_build:
     commands:
-    - echo "Logging into ECR..."
-    - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ECR_REPO_URL
+      - echo "Logging into ECR..."
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ECR_REPO_URL
   build:
     commands:
-    - echo "Building Docker image..."
-    - docker build -t $ECR_REPO_URL:latest ./app
-    - |
-      # Semantic versioning logic
-      if [[ $(git log -1 --pretty=%B) =~ \[major\] ]]; then
-        bumpversion major --current-version $(cat version.txt) --allow-dirty
-      elif [[ $(git log -1 --pretty=%B) =~ \[minor\] ]]; then
-        bumpversion minor --current-version $(cat version.txt) --allow-dirty
-      else
-        bumpversion patch --current-version $(cat version.txt) --allow-dirty
-      fi
-    - VERSION=$(cat version.txt)
-    - docker tag $ECR_REPO_URL:latest $ECR_REPO_URL:$VERSION
+      - echo "Installing bumpversion..."
+      - pip install bumpversion
+      - echo "Building Docker image..."
+      - docker build -t "$ECR_REPO_URL:latest" ./app  # Quotes added for safety
+      - |
+        # Semantic versioning logic
+        if [[ $(git log -1 --pretty=%B) =~ \[major\] ]]; then
+          bumpversion major --current-version $(cat version.txt) --allow-dirty
+        elif [[ $(git log -1 --pretty=%B) =~ \[minor\] ]]; then
+          bumpversion minor --current-version $(cat version.txt) --allow-dirty
+        else
+          bumpversion patch --current-version $(cat version.txt) --allow-dirty
+        fi
+      - VERSION=$(cat version.txt)
+      - docker tag "$ECR_REPO_URL:latest" "$ECR_REPO_URL:$VERSION"
   post_build:
     commands:
-    - echo "Pushing image to ECR..."
-    - docker push $ECR_REPO_URL:latest
-    - docker push $ECR_REPO_URL:$VERSION
-    - echo "Updated version: $VERSION"
+      - echo "Pushing image to ECR..."
+      - docker push "$ECR_REPO_URL:latest"
+      - docker push "$ECR_REPO_URL:$VERSION"
+      - echo "Updated version: $VERSION"

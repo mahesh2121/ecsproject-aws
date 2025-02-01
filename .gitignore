@@ -1,1 +1,33 @@
 terraform/terraform.tfvars
+# Ignore Terraform state files
+terraform.tfstate
+terraform.tfstate.backup
+*.tfstate
+*.tfstate.*
+# Ignore Terraform provider .exe files
+terraform/.terraform/providers/registry.terraform.io/hashicorp/aws/5.84.0/linux_amd64/terraform-provider-aws_v5.84.0_x5
+
+# General ignores for Terraform state files, logs, etc.
+terraform.tfstate
+terraform.tfstate.backup
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+*.log
+.terraform.lock.hcl
+.terraform/
+
+
+# Ignore Terraform plan files
+*.tfplan
+
+# Ignore crash logs
+crash.log
+*.log
+
+# Ignore Terraform lock file (for local state)
+.terraform.lock.hcl
+
+# Ignore Terraform directories
+.terraform/

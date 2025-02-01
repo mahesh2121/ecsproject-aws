@@ -1,28 +1,28 @@
 version: 0.2
 
 phases:
-  install:
-    runtime-versions:
-      # Specify the runtime version you want, for example, Node.js or Python
-      python: 3.8
+  pre_build:
     commands:
-      # Installing dependencies or any setup commands
-      - echo "Installing dependencies..."
-      - pip install -r requirements.txt
-  
+    - echo "Logging into ECR..."
+    - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ECR_REPO_URL
   build:
     commands:
-      # Commands to run the build, for example, running tests or creating artifacts
-      - echo "Running tests..."
-      - pytest tests/
-
+    - echo "Building Docker image..."
+    - docker build -t $ECR_REPO_URL:latest ./app
+    - |
+      # Semantic versioning logic
+      if [[ $(git log -1 --pretty=%B) =~ \[major\] ]]; then
+        bumpversion major --current-version $(cat version.txt) --allow-dirty
+      elif [[ $(git log -1 --pretty=%B) =~ \[minor\] ]]; then
+        bumpversion minor --current-version $(cat version.txt) --allow-dirty
+      else
+        bumpversion patch --current-version $(cat version.txt) --allow-dirty
+      fi
+    - VERSION=$(cat version.txt)
+    - docker tag $ECR_REPO_URL:latest $ECR_REPO_URL:$VERSION
   post_build:
     commands:
-      # Post build steps, such as notification or further actions
-      - echo "Build completed successfully."
-
-artifacts:
-  files:
-    - '**/*'
-  # Optionally, specify any artifacts to be saved after the build
-  discard-paths: yes
+    - echo "Pushing image to ECR..."
+    - docker push $ECR_REPO_URL:latest
+    - docker push $ECR_REPO_URL:$VERSION
+    - echo "Updated version: $VERSION"

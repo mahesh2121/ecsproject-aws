@@ -10,9 +10,9 @@ phases:
       - echo "Installing bumpversion..."
       - pip install bumpversion
       - echo "Building Docker image..."
-      - docker build -t "$ECR_REPO_URL:latest" ./app  # Quotes added for safety
+      - docker build -t "${ECR_REPO_URL}:latest" ./app  # Proper quoting and indentation
       - |
-        # Semantic versioning logic
+        # Semantic versioning logic (indent all lines by 2 spaces)
         if [[ $(git log -1 --pretty=%B) =~ \[major\] ]]; then
           bumpversion major --current-version $(cat version.txt) --allow-dirty
         elif [[ $(git log -1 --pretty=%B) =~ \[minor\] ]]; then
@@ -21,10 +21,10 @@ phases:
           bumpversion patch --current-version $(cat version.txt) --allow-dirty
         fi
       - VERSION=$(cat version.txt)
-      - docker tag "$ECR_REPO_URL:latest" "$ECR_REPO_URL:$VERSION"
+      - docker tag "${ECR_REPO_URL}:latest" "${ECR_REPO_URL}:${VERSION}"
   post_build:
     commands:
       - echo "Pushing image to ECR..."
-      - docker push "$ECR_REPO_URL:latest"
-      - docker push "$ECR_REPO_URL:$VERSION"
-      - echo "Updated version: $VERSION"
+      - docker push "${ECR_REPO_URL}:latest"
+      - docker push "${ECR_REPO_URL}:${VERSION}"
+      - echo "Updated version: ${VERSION}"
